@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vitali — Asistente médico en WhatsApp</title>
+  <meta name="description" content="Vitali es un asistente médico inteligente para WhatsApp que agenda citas, envía recordatorios y responde preguntas con información real de tu clínica." />
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        container: { center: true, padding: '1rem' },
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              50:'#eefaf6',100:'#d6f4ea',200:'#ade8d5',300:'#7fd9bf',400:'#4fc9a8',
+              500:'#22b691',600:'#169877',700:'#107560',800:'#0c5b4d',900:'#094a40'
+            }
+          },
+          boxShadow: {
+            'glow': '0 0 0 6px rgba(34,182,145,0.15)',
+          },
+          backgroundImage: {
+            'grid': 'radial-gradient(circle at 1px 1px, rgba(255,255,255,.08) 1px, transparent 0)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lenis (smooth scroll) -->
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/bundled/lenis.min.js"></script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Decor: animated gradient blob */
+    .blob {
+      filter: blur(40px);
+      animation: float 12s ease-in-out infinite;
+      opacity: .65;
+    }
+    @keyframes float {
+      0% { transform: translate(0,0) scale(1); }
+      50% { transform: translate(10px, -20px) scale(1.05); }
+      100% { transform: translate(0,0) scale(1); }
+    }
+    /* Lenis smooth scroll container fix (optional) */
+    html.lenis { height: auto; }
+    .lenis.lenis-smooth { scroll-behavior: auto !important; }
+    .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 antialiased selection:bg-brand-300/30 selection:text-white">
+  <!-- Background decorations -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-grid bg-[size:22px_22px]"></div>
+    <div class="blob absolute -top-20 -left-20 h-80 w-80 rounded-full bg-brand-500/30"></div>
+    <div class="blob absolute -bottom-24 -right-10 h-96 w-96 rounded-full bg-fuchsia-600/20"></div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60 border-b border-white/5">
+    <div class="container flex items-center justify-between py-3">
+      <a href="#" class="flex items-center gap-2 group">
+        <div class="h-8 w-8 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center group-hover:shadow-glow transition">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="text-brand-400">
+            <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="font-extrabold tracking-tight">Vitali</span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#features" class="hover:text-brand-300 transition">Funcionalidades</a>
+        <a href="#how" class="hover:text-brand-300 transition">Cómo funciona</a>
+        <a href="#pricing" class="hover:text-brand-300 transition">Precios</a>
+        <a href="#faq" class="hover:text-brand-300 transition">FAQs</a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a href="#cta" class="hidden sm:inline-flex px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-900 font-semibold transition shadow-md shadow-brand-500/20">
+          Probar Vitali
+        </a>
+        <button id="menuBtn" class="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 hover:bg-white/5">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobileMenu" class="md:hidden hidden border-t border-white/5 bg-slate-950/80">
+      <div class="container py-4 grid gap-3">
+        <a class="py-2 hover:text-brand-300" href="#features">Funcionalidades</a>
+        <a class="py-2 hover:text-brand-300" href="#how">Cómo funciona</a>
+        <a class="py-2 hover:text-brand-300" href="#pricing">Precios</a>
+        <a class="py-2 hover:text-brand-300" href="#faq">FAQs</a>
+        <a class="py-2 text-brand-300 font-semibold" href="#cta">Probar Vitali</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="container grid lg:grid-cols-2 gap-10 items-center py-16 md:py-24">
+      <div>
+        <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 mb-4">
+          <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          WhatsApp listo · Respuestas humanas · Menos ausencias
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">
+          Agenda, recordatorios y <span class="text-brand-300">respuestas reales</span> desde WhatsApp.
+        </h1>
+        <p class="mt-4 text-white/80 max-w-prose">
+          Vitali es un asistente para clínicas y doctores. Agenda citas, envía recordatorios y responde preguntas con
+          la información oficial de tu consultorio. Automático, seguro y con tono humano.
+        </p>
+
+        <div class="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <a href="#cta" class="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-900 font-semibold transition shadow-md shadow-brand-500/30">
+            Quiero probarlo
+          </a>
+          <a href="#features" class="px-6 py-3 rounded-xl border border-white/10 hover:bg-white/5 font-semibold">
+            Ver cómo funciona
+          </a>
+        </div>
+
+        <div class="mt-8 grid grid-cols-3 gap-4 text-xs text-white/70">
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <div class="text-lg font-extrabold">-60%</div>
+            Cancelaciones tardías
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <div class="text-lg font-extrabold">24/7</div>
+            Respuesta inmediata
+          </div>
+          <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+            <div class="text-lg font-extrabold">+30%</div>
+            Citas confirmadas
+          </div>
+        </div>
+      </div>
+
+      <!-- Mockup card -->
+      <div class="relative">
+        <div class="absolute -inset-6 -z-10 bg-gradient-to-tr from-brand-500/20 via-fuchsia-500/10 to-cyan-500/10 rounded-3xl blur-2xl"></div>
+        <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-6">
+          <div class="rounded-2xl border border-white/10 bg-slate-900 p-4">
+            <div class="flex items-center gap-2">
+              <div class="h-10 w-10 rounded-xl bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="text-brand-400">
+                  <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm font-semibold">Asistente de la Clínica</div>
+                <div class="text-xs text-white/60">en WhatsApp</div>
+              </div>
+            </div>
+            <div class="mt-4 space-y-3 text-sm">
+              <div class="rounded-xl bg-white/5 border border-white/10 p-3">Hola 👋, ¿querés agendar una cita o tenés alguna consulta?</div>
+              <div class="rounded-xl bg-brand-500/10 border border-brand-400/20 p-3 ml-auto">Agendar cita</div>
+              <div class="rounded-xl bg-white/5 border border-white/10 p-3">Perfecto, ¿en qué sede te queda mejor?</div>
+              <div class="rounded-xl bg-brand-500/10 border border-brand-400/20 p-3 ml-auto">Managua</div>
+              <div class="rounded-xl bg-white/5 border border-white/10 p-3">Listo. Tengo horarios para el jueves a las 10:00 o 10:30. ¿Cuál preferís?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-20 md:py-28">
+    <div class="container">
+      <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Todo lo que tu consultorio necesita</h2>
+      <p class="mt-3 text-white/70 max-w-prose">Automatización donde importa, con una comunicación que suena humana y cercana.</p>
+
+      <div class="mt-10 grid md:grid-cols-3 gap-6">
+        <!-- Feature card -->
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="h-10 w-10 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center mb-4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 11h10M7 15h10M7 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="font-semibold text-lg">Agendamiento en WhatsApp</h3>
+          <p class="mt-2 text-white/70 text-sm">Reserva de citas en segundos: sede, servicio y horario disponible.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="h-10 w-10 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center mb-4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1016 0A8 8 0 004 12zm8-5v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="font-semibold text-lg">Recordatorios y confirmación</h3>
+          <p class="mt-2 text-white/70 text-sm">Mensajes T-24h y T-4h con botones para confirmar o reprogramar.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="h-10 w-10 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center mb-4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 6v6l4 2M6 20l12-16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="font-semibold text-lg">Menos ausencias</h3>
+          <p class="mt-2 text-white/70 text-sm">Política clara y límites de reprogramaciones para evitar abusos.</p>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="h-10 w-10 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center mb-4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v6c0 5-3.5 7-8 8-4.5-1-8-3-8-8V7l8-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="font-semibold text-lg">Consentimiento e imágenes</h3>
+          <p class="mt-2 text-white/70 text-sm">Solicita permiso y elimina fotos automáticamente al finalizar la cita.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="h-10 w-10 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center mb-4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="font-semibold text-lg">FAQ inteligente (RAG)</h3>
+          <p class="mt-2 text-white/70 text-sm">Responde dudas con información real de tu clínica: precios, horarios, cuidados, políticas.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="h-10 w-10 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center mb-4">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 9l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 class="font-semibold text-lg">Handoff a humano</h3>
+          <p class="mt-2 text-white/70 text-sm">Cuando lo necesites, se transfiere la conversación a tu asistente.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="py-20 md:py-28">
+    <div class="container">
+      <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Cómo funciona</h2>
+      <p class="mt-3 text-white/70 max-w-prose">Un flujo claro, diseñado para reducir fricción y cerrar más citas.</p>
+
+      <div class="mt-10 grid md:grid-cols-4 gap-6">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="text-sm text-white/60">Paso 1</div>
+          <div class="mt-1 font-semibold">El paciente escribe por WhatsApp</div>
+          <p class="mt-2 text-white/70 text-sm">Saludo en nombre de la clínica. Menú de acciones: agendar, info, hablar con asistente.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="text-sm text-white/60">Paso 2</div>
+          <div class="mt-1 font-semibold">Agenda en segundos</div>
+          <p class="mt-2 text-white/70 text-sm">Elige sede, servicio y horario disponible. Confirmación inmediata.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="text-sm text-white/60">Paso 3</div>
+          <div class="mt-1 font-semibold">Recordatorios y confirmación</div>
+          <p class="mt-2 text-white/70 text-sm">Mensajes T-24h (y T-4h si no confirma) con botones de Confirmar/Reprogramar.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div class="text-sm text-white/60">Paso 4</div>
+          <div class="mt-1 font-semibold">Preguntas resueltas</div>
+          <p class="mt-2 text-white/70 text-sm">FAQ inteligente con documentos reales. Si hay emergencia, se transfiere a humano.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials / Benefits -->
+  <section class="py-20 md:py-28">
+    <div class="container">
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+          <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Resultados que se notan</h2>
+          <p class="mt-3 text-white/70 max-w-prose">Menos llamadas, más citas confirmadas y pacientes mejor informados.</p>
+
+          <div class="mt-8 grid sm:grid-cols-2 gap-6">
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div class="text-4xl font-extrabold text-brand-300">-60%</div>
+              <div class="mt-1 text-white/70">Cancelaciones de último momento</div>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div class="text-4xl font-extrabold text-brand-300">+30%</div>
+              <div class="mt-1 text-white/70">Citas confirmadas por recordatorio</div>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div class="text-4xl font-extrabold text-brand-300">24/7</div>
+              <div class="mt-1 text-white/70">Atención inmediata por WhatsApp</div>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div class="text-4xl font-extrabold text-brand-300">0</div>
+              <div class="mt-1 text-white/70">Apps nuevas para el paciente</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <blockquote class="text-white/90">
+            “Con Vitali la agenda se ordenó sola. Menos llamadas, más confirmaciones.
+            Los pacientes sienten que hablan con nosotros, no con un bot.”
+          </blockquote>
+          <div class="mt-4 text-sm text-white/60">— Dirección de Clínica Aliada</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-20 md:py-28">
+    <div class="container">
+      <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Planes simples</h2>
+      <p class="mt-3 text-white/70 max-w-prose">Empieza con un doctor. Crece a tu ritmo.</p>
+
+      <div class="mt-10 grid md:grid-cols-3 gap-6">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col">
+          <div class="text-sm font-semibold text-white/70">Básico</div>
+          <div class="mt-2 text-4xl font-extrabold">$39<span class="text-base font-semibold text-white/60">/mes</span></div>
+          <ul class="mt-4 text-sm text-white/80 space-y-2">
+            <li>• Agendamiento por WhatsApp</li>
+            <li>• Recordatorios T-24h</li>
+            <li>• Cancelación/Reprogramación con límites</li>
+            <li>• Soporte por chat</li>
+          </ul>
+          <a href="#cta" class="mt-6 inline-flex justify-center rounded-xl border border-white/10 px-4 py-3 hover:bg-white/5 font-semibold">Probar</a>
+        </div>
+
+        <div class="rounded-2xl border border-brand-400/40 bg-brand-500/10 p-6 flex flex-col ring-1 ring-brand-400/30">
+          <div class="text-sm font-semibold text-brand-300">Profesional</div>
+          <div class="mt-2 text-4xl font-extrabold">$79<span class="text-base font-semibold text-white/80">/mes</span></div>
+          <ul class="mt-4 text-sm text-white space-y-2">
+            <li>• Todo lo del Básico</li>
+            <li>• Consentimiento e imágenes</li>
+            <li>• FAQ inteligente (RAG)</li>
+            <li>• Multi-sede</li>
+          </ul>
+          <a href="#cta" class="mt-6 inline-flex justify-center rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-900 px-4 py-3 font-semibold shadow-glow">Comenzar</a>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col">
+          <div class="text-sm font-semibold text-white/70">Clínica</div>
+          <div class="mt-2 text-4xl font-extrabold">$149<span class="text-base font-semibold text-white/60">/mes</span></div>
+          <ul class="mt-4 text-sm text-white/80 space-y-2">
+            <li>• Hasta 3 doctores</li>
+            <li>• Reportes básicos</li>
+            <li>• Branding y mensajes personalizados</li>
+            <li>• Soporte prioritario</li>
+          </ul>
+          <a href="#cta" class="mt-6 inline-flex justify-center rounded-xl border border-white/10 px-4 py-3 hover:bg-white/5 font-semibold">Hablar con ventas</a>
+        </div>
+      </div>
+      <p class="mt-4 text-xs text-white/60">*Precios de referencia. Podemos ajustar a tu país y necesidades.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-20 md:py-28">
+    <div class="container">
+      <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Preguntas frecuentes</h2>
+      <div class="mt-8 grid md:grid-cols-2 gap-6">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 class="font-semibold">¿Necesito una app nueva?</h3>
+          <p class="mt-2 text-white/70 text-sm">No. Todo sucede en WhatsApp, para vos y tus pacientes.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 class="font-semibold">¿Cómo se evitan cancelaciones tardías?</h3>
+          <p class="mt-2 text-white/70 text-sm">Recordatorios y confirmación activa, más límites de cambios y derivación a asistente si es <12h.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 class="font-semibold">¿Puede responder dudas de precios y servicios?</h3>
+          <p class="mt-2 text-white/70 text-sm">Sí. Usa documentos reales de tu clínica (RAG) para responder con precisión y tono humano.</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 class="font-semibold">¿Qué pasa con las fotos?</h3>
+          <p class="mt-2 text-white/70 text-sm">Se piden con consentimiento y se eliminan automáticamente al cerrar la cita.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta" class="py-20 md:py-28">
+    <div class="container">
+      <div class="rounded-3xl border border-brand-400/30 bg-gradient-to-tr from-brand-500/10 via-fuchsia-600/10 to-cyan-500/10 p-8 md:p-12">
+        <h2 class="text-3xl md:text-4xl font-extrabold">Listo para agendar más y atender mejor</h2>
+        <p class="mt-3 text-white/80 max-w-prose">Con Vitali, tus pacientes obtienen respuestas inmediatas y vos ganás tiempo. Configuramos un piloto en días.</p>
+
+        <form onsubmit="event.preventDefault(); handleLead();" class="mt-6 grid md:grid-cols-3 gap-3">
+          <input id="leadName" type="text" placeholder="Tu nombre" class="col-span-1 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:ring-2 focus:ring-brand-400/60" required />
+          <input id="leadEmail" type="email" placeholder="Tu correo" class="col-span-1 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:ring-2 focus:ring-brand-400/60" required />
+          <button class="col-span-1 w-full rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-900 font-semibold px-4 py-3 shadow-glow">Quiero una demo</button>
+        </form>
+        <p id="leadMsg" class="mt-3 text-sm text-white/70 hidden">¡Gracias! Te contactaremos a la brevedad.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-10 border-t border-white/5 text-white/60">
+    <div class="container flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="h-7 w-7 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-brand-400"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <span class="font-semibold">Vitali</span>
+      </div>
+      <div class="text-xs">© <span id="year"></span> Vitali. Todos los derechos reservados.</div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn?.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Lenis init
+    const lenis = new Lenis({ smoothWheel: true, lerp: 0.08 });
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+
+    // Smooth anchors: Lenis handles <a href="#id">
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', () => mobileMenu?.classList.add('hidden'));
+    });
+
+    // Fake lead capture (local demo)
+    function handleLead() {
+      const n = document.getElementById('leadName').value.trim();
+      const e = document.getElementById('leadEmail').value.trim();
+      if (!n || !e) return;
+      document.getElementById('leadMsg').classList.remove('hidden');
+      alert(`Gracias, ${n}. Te contactaremos al correo: ${e}`);
+    }
+
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
