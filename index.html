@@ -34,7 +34,7 @@
   </script>
 
   <!-- Lenis (smooth scroll) -->
-  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/bundled/lenis.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.3.15/dist/lenis.min.js"></script> 
 
   <!-- Inter font -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -70,7 +70,7 @@
   <!-- Navbar -->
   <header class="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60 border-b border-white/5">
     <div class="container flex items-center justify-between py-3">
-      <a href="#" class="flex items-center gap-2 group">
+      <a href="#hero" class="flex items-center gap-2 group">
         <div class="h-8 w-8 rounded-lg bg-brand-500/20 ring-1 ring-brand-400/40 grid place-content-center group-hover:shadow-glow transition">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="text-brand-400">
             <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -107,7 +107,7 @@
   </header>
 
   <!-- Hero -->
-  <section class="relative overflow-hidden">
+  <section id="hero" class="relative overflow-hidden">
     <div class="container grid lg:grid-cols-2 gap-10 items-center py-16 md:py-24">
       <div>
         <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 mb-4">
@@ -410,17 +410,57 @@
       mobileMenu.classList.toggle('hidden');
     });
 
-    // Lenis init
-    const lenis = new Lenis({ smoothWheel: true, lerp: 0.08 });
-    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
+    let lenis = null;
+    const hasLenis = typeof Lenis !== 'undefined';
 
-    // Smooth anchors: Lenis handles <a href="#id">
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-      a.addEventListener('click', () => mobileMenu?.classList.add('hidden'));
+    if (hasLenis) {
+      lenis = new Lenis({
+        smoothWheel: true,
+        lerp: 0.06,
+      });
+
+      function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+    } else {
+      console.warn('Lenis no está disponible, usando smooth scroll nativo.');
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        const href = a.getAttribute('href');
+
+        mobileMenu?.classList.add('hidden');
+
+        if (!href || href === '#') return;
+
+        e.preventDefault();
+
+        const target = document.querySelector(href);
+        if (!target) return;
+
+        if (lenis) {
+          lenis.scrollTo(target, {
+            offset: -80,
+            duration: 1.5,
+            easing: (t) => 1 - Math.pow(1 - t, 3), // ease-out
+          });
+        } else {
+          const top =
+            target.getBoundingClientRect().top +
+            window.scrollY -
+            80;
+
+          window.scrollTo({
+            top,
+            behavior: 'smooth',
+          });
+        }
+      });
     });
 
-    // Fake lead capture (local demo)
     function handleLead() {
       const n = document.getElementById('leadName').value.trim();
       const e = document.getElementById('leadEmail').value.trim();
